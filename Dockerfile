@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN docker-php-ext-install \
-    pdo pdo_pgsql pgsql mbstring xml zip bcmath gd tokenizer ctype fileinfo intl
+    pdo pdo_pgsql pgsql mbstring xml zip bcmath gd intl
 
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
