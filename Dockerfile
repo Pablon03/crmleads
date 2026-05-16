@@ -28,7 +28,14 @@ RUN php artisan package:discover --ansi || true
 RUN npm run build
 RUN php artisan filament:assets || true
 
-RUN chmod -R 775 storage bootstrap/cache
+RUN mkdir -p storage/app/public \
+        storage/framework/cache/data \
+        storage/framework/sessions \
+        storage/framework/testing \
+        storage/framework/views \
+        storage/logs \
+        bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
 
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
