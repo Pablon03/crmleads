@@ -1,6 +1,7 @@
-FROM dunglas/frankenphp:latest-php8.4-alpine
+FROM dunglas/frankenphp:1-php8.4
 
-RUN apk add --no-cache nodejs npm git unzip
+RUN apt-get update && apt-get install -y nodejs npm git unzip \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN install-php-extensions \
     pdo_pgsql pgsql mbstring xml zip bcmath gd intl opcache
