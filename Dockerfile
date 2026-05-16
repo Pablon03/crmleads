@@ -24,13 +24,15 @@ RUN npm ci
 
 COPY . .
 
-RUN php artisan package:discover --ansi
+RUN php artisan package:discover --ansi || true
+RUN npm run build
+RUN php artisan filament:assets || true
 
-RUN npm run build && php artisan filament:assets
+RUN chmod -R 775 storage bootstrap/cache
 
-RUN chown -R www-data:www-data storage bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
 
 EXPOSE 8080
 
-CMD sh -c "php artisan config:cache; php artisan route:cache; php artisan view:cache; php artisan migrate --force; php -S 0.0.0.0:${PORT:-8080} -t public public/index.php"
+CMD ["/start.sh"]
