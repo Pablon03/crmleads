@@ -3,3 +3,47 @@
 @source '../../../../app/Filament/**/*';
 @source '../../../../resources/views/filament/**/*';
 @source '../../../../vendor/relaticle/flowforge/resources/views/**/*.blade.php';
+
+/* ───────────────────────────────────────────────────────────────
+   CercaDigital · retoques visuales
+   Tarjetas redondeadas, sombras suaves y acento cálido.
+   ─────────────────────────────────────────────────────────────── */
+
+/* Fondo claro en modo día para que las tarjetas resalten */
+.fi-main {
+    background-color: #f8fafc;
+}
+.dark .fi-main {
+    background-color: transparent;
+}
+
+/* Tarjetas, secciones, tablas y gráficos: bordes redondos + sombra suave */
+.fi-section,
+.fi-wi-stats-overview-stat,
+.fi-ta-ctn,
+.fi-wi-chart {
+    border-radius: 1rem !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04),
+                0 8px 22px -14px rgba(15, 23, 42, 0.28) !important;
+}
+
+/* Tarjetas de métricas: acento superior naranja + ligera elevación al pasar */
+.fi-wi-stats-overview-stat {
+    border-top: 3px solid #f97316;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.fi-wi-stats-overview-stat:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(15, 23, 42, 0.06),
+                0 14px 30px -16px rgba(15, 23, 42, 0.35) !important;
+}
+
+/* Números de las métricas un poco más contundentes */
+.fi-wi-stats-overview-stat-value {
+    font-weight: 700;
+}
+
+/* Barra lateral con un poco más de aire arriba */
+.fi-sidebar-nav {
+    padding-top: 0.5rem;
+}
