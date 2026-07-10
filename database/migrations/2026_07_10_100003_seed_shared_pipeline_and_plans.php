@@ -13,7 +13,8 @@ return new class extends Migration
 {
     public function up(): void
     {
-        $primaryId = User::withoutGlobalScopes()->where('is_admin', true)->min('id')
+        // whereRaw: Postgres no acepta comparar boolean con integer (is_admin = 1).
+        $primaryId = User::withoutGlobalScopes()->whereRaw('is_admin = true')->min('id')
             ?? User::withoutGlobalScopes()->min('id');
 
         if (! $primaryId) {

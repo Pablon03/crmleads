@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\LeadStatus;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Pipeline COMPARTIDO de equipo. Refleja el proceso real del negocio:
@@ -29,7 +30,8 @@ class LeadStatusSeeder extends Seeder
 
     public function run(): void
     {
-        $primaryId = User::withoutGlobalScopes()->where('is_admin', true)->min('id')
+        // whereRaw: Postgres no acepta comparar boolean con integer (is_admin = 1).
+        $primaryId = User::withoutGlobalScopes()->whereRaw('is_admin = true')->min('id')
             ?? User::withoutGlobalScopes()->min('id');
 
         if ($primaryId) {
@@ -82,11 +84,14 @@ class LeadStatusSeeder extends Seeder
         }
 
         // Garantiza un único estado por defecto (el de menor posición).
+        // DB::raw('false'/'true'): en Postgres el update masivo no pasa por el mutador
+        // del modelo, así que hay que forzar el literal booleano.
         $default = LeadStatus::withoutGlobalScopes()->orderBy('position')->first();
         if ($default) {
             LeadStatus::withoutGlobalScopes()->where('id', '!=', $default->id)
-                ->update(['is_default' => false]);
-            $default->update(['is_default' => true]);
+                ->update(['is_default' => DB::raw('false')]);
+            LeadStatus::withoutGlobalScopes()->where('id', $default->id)
+                ->update(['is_default' => DB::raw('true')]);
         }
     }
 }
