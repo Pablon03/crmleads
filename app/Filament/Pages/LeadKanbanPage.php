@@ -37,17 +37,31 @@ class LeadKanbanPage extends BoardPage
 
         return $board
             ->columns($columns)
-            ->query(Lead::query()->with(['folder', 'status']))
+            ->query(Lead::query()->with(['folder', 'status', 'assignedUser']))
             ->columnIdentifier('status_id')
             ->positionIdentifier('kanban_order')
             ->recordTitleAttribute('business_name')
             ->cardAction('edit_lead')
             ->cardSchema(function ($schema) {
                 return $schema->components([
+                    TextEntry::make('priority_score')
+                        ->hiddenLabel()
+                        ->badge()
+                        ->formatStateUsing(fn ($state) => is_null($state) ? null : 'Prioridad ' . (int) $state)
+                        ->color(fn ($state) => match (true) {
+                            $state >= 70 => 'success',
+                            $state >= 45 => 'warning',
+                            default      => 'gray',
+                        }),
                     TextEntry::make('category')
                         ->hiddenLabel()
                         ->badge()
                         ->color('gray'),
+                    TextEntry::make('assignedUser.name')
+                        ->hiddenLabel()
+                        ->icon('heroicon-o-user')
+                        ->placeholder('Sin asignar')
+                        ->size('sm'),
                     TextEntry::make('phone')
                         ->hiddenLabel()
                         ->icon('heroicon-o-phone')

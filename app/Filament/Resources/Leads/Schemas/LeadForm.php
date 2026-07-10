@@ -5,6 +5,8 @@ namespace App\Filament\Resources\Leads\Schemas;
 use App\Models\Folder;
 use App\Models\LeadStatus;
 use App\Models\Service;
+use App\Models\User;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -90,6 +92,13 @@ class LeadForm
                                     ->searchable()
                                     ->nullable(),
 
+                                Select::make('assigned_to')
+                                    ->label('Asignado a')
+                                    ->options(fn () => User::pluck('name', 'id'))
+                                    ->searchable()
+                                    ->placeholder('Sin asignar')
+                                    ->nullable(),
+
                                 DateTimePicker::make('follow_up_at')
                                     ->label('Seguimiento programado')
                                     ->nullable(),
@@ -142,24 +151,44 @@ class LeadForm
                                             ]),
 
                                         Select::make('status')
-                                            ->label('Estado')
+                                            ->label('Estado de la suscripción')
                                             ->options([
                                                 'interested' => 'Interesado',
                                                 'proposed'   => 'Propuesta enviada',
-                                                'sold'       => 'Vendido',
+                                                'sold'       => '✓ Cliente activo',
+                                                'paused'     => 'Pausada',
+                                                'churned'    => 'Baja',
                                                 'rejected'   => 'Rechazado',
                                             ])
                                             ->required()
-                                            ->default('interested'),
+                                            ->live()
+                                            ->default('interested')
+                                            ->helperText('Solo "Cliente activo" cuenta para el MRR.'),
 
-                                        TextInput::make('sold_price')
-                                            ->label('Precio de venta')
+                                        TextInput::make('monthly_price')
+                                            ->label('Cuota mensual')
                                             ->numeric()
                                             ->prefix('€')
+                                            ->suffix('/mes')
+                                            ->placeholder(fn ($get) => Service::find($get('service_id'))?->base_price)
+                                            ->helperText('Si lo dejas vacío, se usa la cuota base del plan.')
                                             ->nullable(),
 
-                                        DateTimePicker::make('sold_at')
-                                            ->label('Fecha de venta')
+                                        TextInput::make('billing_day')
+                                            ->label('Día de cobro')
+                                            ->numeric()
+                                            ->minValue(1)
+                                            ->maxValue(28)
+                                            ->placeholder('Ej: 1')
+                                            ->nullable(),
+
+                                        DatePicker::make('started_at')
+                                            ->label('Alta (inicio)')
+                                            ->nullable(),
+
+                                        DatePicker::make('canceled_at')
+                                            ->label('Baja (fin)')
+                                            ->visible(fn ($get) => in_array($get('status'), ['paused', 'churned'], true))
                                             ->nullable(),
 
                                         Textarea::make('notes')

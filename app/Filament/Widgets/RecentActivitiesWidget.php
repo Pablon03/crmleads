@@ -18,7 +18,6 @@ class RecentActivitiesWidget extends TableWidget
         return $table
             ->query(
                 Activity::query()
-                    ->where('user_id', auth()->id())
                     ->with('lead')
                     ->orderByDesc('occurred_at')
                     ->limit(10)

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Leads\Tables;
 
 use App\Models\Folder;
 use App\Models\LeadStatus;
+use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -70,16 +71,36 @@ class LeadsTable
                         default        => 'Sin teléfono',
                     }),
 
+                TextColumn::make('priority_score')
+                    ->label('Prioridad')
+                    ->badge()
+                    ->sortable()
+                    ->alignCenter()
+                    ->formatStateUsing(fn ($state) => is_null($state) ? '—' : (int) $state)
+                    ->color(fn ($state) => match (true) {
+                        $state >= 70 => 'success',
+                        $state >= 45 => 'warning',
+                        default      => 'gray',
+                    })
+                    ->tooltip('Cuanto más alto, mejor prospecto (sin web, pocas reseñas, móvil...).'),
+
                 TextColumn::make('status.name')
                     ->label('Estado')
                     ->badge()
                     ->color(fn ($record) => $record->status?->color ? 'primary' : 'gray'),
 
+                TextColumn::make('assignedUser.name')
+                    ->label('Asignado')
+                    ->badge()
+                    ->color('info')
+                    ->placeholder('Sin asignar'),
+
                 TextColumn::make('folder.name')
                     ->label('Carpeta')
                     ->badge()
                     ->color('info')
-                    ->placeholder('Sin carpeta'),
+                    ->placeholder('Sin carpeta')
+                    ->toggleable(),
 
                 IconColumn::make('website')
                     ->label('Web')
@@ -116,6 +137,19 @@ class LeadsTable
                     ->label('Estado')
                     ->options(fn () => LeadStatus::orderBy('position')->pluck('name', 'id'))
                     ->placeholder('Todos los estados'),
+
+                SelectFilter::make('assigned_to')
+                    ->label('Asignado a')
+                    ->options(fn () => User::pluck('name', 'id'))
+                    ->placeholder('Cualquiera'),
+
+                Filter::make('high_priority')
+                    ->label('Prioridad alta (70+)')
+                    ->query(fn (Builder $query) => $query->where('priority_score', '>=', 70)),
+
+                Filter::make('unassigned')
+                    ->label('Sin asignar')
+                    ->query(fn (Builder $query) => $query->whereNull('assigned_to')),
 
                 SelectFilter::make('category')
                     ->label('Categoría')
@@ -234,6 +268,20 @@ class LeadsTable
                         ])
                         ->action(fn (Collection $records, array $data) =>
                             $records->each->update(['status_id' => $data['status_id']])
+                        ),
+
+                    BulkAction::make('assign_to')
+                        ->label('Asignar a')
+                        ->icon('heroicon-o-user-plus')
+                        ->form([
+                            Select::make('assigned_to')
+                                ->label('Responsable')
+                                ->options(fn () => User::pluck('name', 'id'))
+                                ->placeholder('Sin asignar')
+                                ->nullable(),
+                        ])
+                        ->action(fn (Collection $records, array $data) =>
+                            $records->each->update(['assigned_to' => $data['assigned_to'] ?? null])
                         ),
 
                     DeleteBulkAction::make(),

@@ -16,7 +16,8 @@ class CreateUser extends CreateRecord
         /** @var User $user */
         $user = $this->record;
 
-        // Cada usuario nuevo arranca con su propio pipeline (Nuevo, Contactado, etc.)
-        LeadStatusSeeder::createForUser($user->id);
+        // Pipeline COMPARTIDO de equipo: no se crea un pipeline por usuario.
+        // Solo se garantiza que el set compartido de estados exista (no-op si ya está).
+        LeadStatusSeeder::ensureSharedDefaults($user->id);
     }
 }

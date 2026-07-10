@@ -52,21 +52,23 @@ it('crea un lead correctamente', function () {
     ]);
 });
 
-// ── Test 2: Global Scope — usuario solo ve sus leads ──────────────────────
+// ── Test 2: Pipeline compartido — el equipo ve todos los leads ────────────
 
-it('el global scope filtra leads por usuario', function () {
+it('el pipeline es compartido: todo el equipo ve todos los leads', function () {
     $user1 = createUserWithStatuses();
     $user2 = createUserWithStatuses();
 
     makeLead($user1, ['business_name' => 'Lead de User1']);
     makeLead($user2, ['business_name' => 'Lead de User2']);
 
+    // Aunque actuemos como user1, el modelo de equipo muestra los leads de todos.
     $this->actingAs($user1);
 
     $leads = Lead::all();
 
-    expect($leads)->toHaveCount(1)
-        ->and($leads->first()->business_name)->toBe('Lead de User1');
+    expect($leads)->toHaveCount(2)
+        ->and($leads->pluck('business_name')->all())
+        ->toContain('Lead de User1', 'Lead de User2');
 });
 
 // ── Test 3: Scope withFollowUpDue ─────────────────────────────────────────

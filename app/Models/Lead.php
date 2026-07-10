@@ -17,8 +17,11 @@ class Lead extends Model
 
     protected $fillable = [
         'user_id',
+        'assigned_to',
         'folder_id',
         'status_id',
+        'priority_score',
+        'source',
         'business_name',
         'address',
         'phone',
@@ -40,13 +43,66 @@ class Lead extends Model
     ];
 
     protected $casts = [
-        'rating'        => 'decimal:1',
-        'opening_hours' => 'array',
-        'images'        => 'array',
-        'raw_data'      => 'array',
-        'follow_up_at'  => 'datetime',
-        'has_whatsapp'  => 'boolean',
+        'rating'         => 'decimal:1',
+        'priority_score' => 'integer',
+        'opening_hours'  => 'array',
+        'images'         => 'array',
+        'raw_data'       => 'array',
+        'follow_up_at'   => 'datetime',
+        'has_whatsapp'   => 'boolean',
     ];
+
+    protected static function booted(): void
+    {
+        // Recalcula la prioridad del lead en cada guardado (importación y edición manual).
+        static::saving(function (Lead $lead) {
+            $lead->priority_score = self::computePriorityScore($lead);
+        });
+    }
+
+    /**
+     * Puntuación 0-100 para priorizar el trabajo comercial.
+     * Cuanto peor está la presencia online del negocio, mejor prospecto es.
+     */
+    public static function computePriorityScore(Lead $lead): int
+    {
+        $score = 0;
+
+        // Sin web = máxima oportunidad.
+        if (blank($lead->website)) {
+            $score += 40;
+        }
+
+        // Pocas reseñas = ficha descuidada.
+        $reviews = $lead->reviews_count;
+        if (is_null($reviews) || $reviews < 10) {
+            $score += 25;
+        } elseif ($reviews < 30) {
+            $score += 12;
+        }
+
+        // Negocio con reputación decente = merece la pena.
+        $rating = (float) $lead->rating;
+        if ($rating >= 4) {
+            $score += 15;
+        } elseif ($rating >= 3) {
+            $score += 8;
+        }
+
+        // Contactabilidad: móvil (WhatsApp) suma más que fijo.
+        $digits = preg_replace('/[^0-9]/', '', (string) $lead->phone);
+        if (strlen($digits) === 11 && str_starts_with($digits, '34')) {
+            $digits = substr($digits, 2);
+        }
+        $first = $digits[0] ?? '';
+        if (in_array($first, ['6', '7'], true)) {
+            $score += 20;
+        } elseif (in_array($first, ['8', '9'], true)) {
+            $score += 10;
+        }
+
+        return min(100, $score);
+    }
 
     protected function hasWhatsapp(): Attribute
     {
@@ -83,6 +139,12 @@ class Lead extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    // Responsable operativo del lead (Pablo / Tomás / Ornella).
+    public function assignedUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
     }
 
     public function folder(): BelongsTo

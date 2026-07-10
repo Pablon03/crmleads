@@ -11,6 +11,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             LeadStatusSeeder::class,
+            ServiceSeeder::class,
         ]);
     }
 }

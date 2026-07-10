@@ -19,12 +19,27 @@ class ServiceForm
                     ->maxLength(255),
 
                 TextInput::make('base_price')
-                    ->label('Precio base')
+                    ->label('Cuota mensual')
+                    ->helperText('Para servicios recurrentes es la cuota al mes.')
                     ->required()
                     ->numeric()
                     ->default(0)
                     ->prefix('€')
+                    ->suffix('/mes')
                     ->minValue(0),
+
+                Toggle::make('is_recurring')
+                    ->label('Suscripción mensual')
+                    ->helperText('Desactívalo solo si es un pago único.')
+                    ->default(true),
+
+                TextInput::make('setup_fee')
+                    ->label('Alta / matrícula (pago único)')
+                    ->numeric()
+                    ->prefix('€')
+                    ->placeholder('Opcional')
+                    ->minValue(0)
+                    ->nullable(),
 
                 TextInput::make('payment_link')
                     ->label('Link de pago (Stripe)')

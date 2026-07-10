@@ -27,10 +27,10 @@ class ImportLeadsFromGoogleMapsJob implements ShouldQueue
 
     public function handle(LeadScraperInterface $scraper): void
     {
-        // Obtener estado por defecto del usuario
+        // Estado por defecto del pipeline COMPARTIDO del equipo.
         $defaultStatus = LeadStatus::withoutGlobalScopes()
-            ->where('user_id', $this->userId)
             ->whereRaw('"is_default" = true')
+            ->orderBy('position')
             ->first();
 
         $businesses = $scraper->fetchBusinesses(

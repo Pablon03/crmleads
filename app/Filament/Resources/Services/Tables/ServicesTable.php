@@ -23,15 +23,32 @@ class ServicesTable
                     ->weight('bold'),
 
                 TextColumn::make('base_price')
-                    ->label('Precio base')
+                    ->label('Cuota')
                     ->money('EUR')
+                    ->suffix(fn ($record) => $record->is_recurring ? ' /mes' : '')
                     ->sortable(),
 
-                // Leads que han comprado este servicio
-                TextColumn::make('sold_leads_count')
-                    ->label('Vendido a')
+                IconColumn::make('is_recurring')
+                    ->label('Recurrente')
+                    ->boolean(),
+
+                // Clientes activos con este plan
+                TextColumn::make('active_clients_count')
+                    ->label('Clientes activos')
                     ->getStateUsing(fn ($record) => $record->leadServices()->where('status', 'sold')->count())
-                    ->suffix(' lead/s')
+                    ->suffix(' cliente/s')
+                    ->badge()
+                    ->color('success'),
+
+                // MRR aportado por este plan
+                TextColumn::make('plan_mrr')
+                    ->label('MRR')
+                    ->getStateUsing(fn ($record) => '€' . number_format(
+                        $record->leadServices()->where('status', 'sold')
+                            ->get()
+                            ->sum(fn ($ls) => (float) ($ls->monthly_price ?? $record->base_price)),
+                        0, ',', '.'
+                    ))
                     ->badge()
                     ->color('success'),
 
